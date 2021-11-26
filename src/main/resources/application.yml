@@ -1,0 +1,100 @@
+server:
+  port: 9005
+
+spring:
+  data:
+    redis:
+      repositories:
+        enabled: false
+    mongodb:
+      host: localhost
+      port: 27017
+      username: myuser
+      password: 123456
+      database: ubank
+  cache:
+    type: redis
+  redis:
+    database: 1
+    host: localhost
+    password: 123456
+    port: 6379
+    jedis:
+      pool:
+        max-idle: 100
+        min-idle: 100
+        max-active: 8
+        max-wait: -1s
+    timeout: 60s
+  aop:
+    proxy-target-class: true
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: serve_default
+          uri: http://localhost:9005/index.html
+          predicates:
+            - Path=/
+        - id: serve_swealth
+          uri: lb://swealth-server
+          predicates:
+            - Path=/swealth/**
+          filters:
+            - StripPrefix=1
+        - id: serve_sstudent
+          uri: lb://sstudent-server
+          predicates:
+            - Path=/sstudent/**
+          filters:
+            - StripPrefix=1
+        - id: serve_schat
+          uri: lb://schat-server
+          predicates:
+            - Path=/schat/**
+          filters:
+            - StripPrefix=1
+        - id: serve_schat_topic
+          uri: lb:ws://schat-server
+          predicates:
+            - Path=/schat/topic/**
+          filters:
+            - StripPrefix=1
+        - id: serve_schat_app
+          uri: lb:ws://schat-server
+          predicates:
+            - Path=/schat/app/**
+          filters:
+            - StripPrefix=1
+        - id: serve_schat_user
+          uri: lb:ws://schat-server
+          predicates:
+            - Path=/schat/user/**
+          filters:
+            - StripPrefix=1
+
+#Hystrix的fallbackcmd的时间
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 5000
+feign:
+  schat:
+    url: http://localhost:9090
+  swealth:
+    url: http://localhost:7070
+  sstudent:
+    url: http://localhost:9095
+
+my:
+  security:
+    defaultLoginFullPage: http://localhost:9005/#/auth/login
+    maxVisitNumber: 1000
+    blacklistExpireTime: 604800000
+
